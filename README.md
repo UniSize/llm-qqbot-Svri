@@ -8,7 +8,21 @@
 | --- | --- | --- | --- |
 | **`onebot`（唯一支持）** | **QQ** | **收发均可用** | OneBot 11 协议（HTTP + WebSocket），收发均为结构化数据 |
 
-选择 OneBot 的原因：QQ 生态已有既定的机器人协议标准，NapCat / LLOneBot / go-cqhttp 把 QQ 包装成 HTTP + WebSocket 接口，收发消息就是普通 JSON，不需要点击坐标、抢占前台、操作剪贴板或依赖 OCR。早期尝试过的两条微信路线（4.x 客户端 UI 自动化、wechaty）均已移除，仓库中不再包含相关代码。
+选择 OneBot 的原因：QQ 生态已有既定的机器人协议标准，NapCat / LLOneBot / go-cqhttp 把 QQ 包装成 HTTP + WebSocket 接口，收发消息就是普通 JSON。
+
+---
+
+## 开发说明
+
+本项目的代码在 **DeepSeek Harness** 的辅助下完成
+
+需要注意的是：
+
+- **DeepSeek Harness 不是本项目的运行时依赖。** 运行本项目只需 Node.js 18.17+，无需安装任何 AI 工具或第三方包。
+- 项目零第三方代码依赖，全部源码位于本仓库内，可独立审计。
+- 若有芥于AI生成的代码，可先读 `test/run-tests.js` —— 其中 63 项用例覆盖了
+  桥接、会话、人格、限流、控制台等主要路径，`npm test` 即可自行验证。
+
 
 ---
 
