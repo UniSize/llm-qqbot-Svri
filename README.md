@@ -14,7 +14,7 @@
 
 ## 开发说明
 
-本项目的代码在 **DeepSeek Harness** 的辅助下完成
+本项目的代码在 **DeepSeek Harness** 的辅助下完成。
 
 需要注意的是：
 

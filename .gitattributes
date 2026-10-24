@@ -1,4 +1,4 @@
-﻿# 默认：由 git 自动判断文本/二进制，并在仓库内统一用 LF 存储
+# 默认：由 git 自动判断文本/二进制，并在仓库内统一用 LF 存储
 * text=auto
 
 # Windows 脚本必须保持 CRLF，否则 PowerShell 5.1 与 cmd 在某些场景会出现怪问题
