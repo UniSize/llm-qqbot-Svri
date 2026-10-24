@@ -1,0 +1,44 @@
+{
+    "name": "llm-qqbot-svri",
+    "version": "0.2.0",
+    "description": "把 DeepSeek 接入 QQ 的开源对话机器人：多人格、群聊 @ 触发、上下文管理，附网页控制台。仅依赖 OneBot 11 协议，可搭配任意 OneBot 实现（NapCat / LLOneBot / Lagrange / go-cqhttp）。",
+    "type": "module",
+    "license": "MIT",
+    "author": "UniSize",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/UniSize/llm-qqbot-Svri.git"
+    },
+    "bugs": {
+        "url": "https://github.com/UniSize/llm-qqbot-Svri/issues"
+    },
+    "homepage": "https://github.com/UniSize/llm-qqbot-Svri#readme",
+    "main": "src/index.js",
+    "exports": {
+        ".": "./src/index.js",
+        "./plugin": "./src/plugin.js",
+        "./llm": "./src/llm.js"
+    },
+    "engines": {
+        "node": ">=18.17"
+    },
+    "scripts": {
+        "start": "node bin/cli.js",
+        "ui": "node bin/webui.js",
+        "dev": "node --watch bin/cli.js",
+        "test": "node test/run-tests.js",
+        "mock": "node test/mock-deepseek-server.js",
+        "mock:onebot": "node test/mock-onebot-server.js"
+    },
+    "keywords": [
+        "deepseek",
+        "qq",
+        "onebot",
+        "napcat",
+        "chatbot",
+        "llm",
+        "plugin",
+        "webui"
+    ],
+    "dependencies": {}
+}

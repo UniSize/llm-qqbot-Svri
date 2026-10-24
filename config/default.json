@@ -1,0 +1,74 @@
+{
+  "deepseek": {
+    "apiKey": "",
+    "baseUrl": "https://api.deepseek.com",
+    "model": "deepseek-chat",
+    "temperature": 1,
+    "maxTokens": 1024,
+    "timeoutMs": 60000,
+    "maxRetries": 2,
+    "stream": true
+  },
+  "bot": {
+    "name": "小深",
+    "systemPrompt": "你是「小深」，一个接入 QQ 的智能助手。回答要简洁、准确、口语化，适合手机屏幕阅读，一般不超过 200 字。",
+    "welcomeMessage": "你好，我是 {botName}，一个由 DeepSeek 驱动的助手。有什么可以帮你的吗？",
+    "errorMessage": "抱歉，我这边出了点问题，请稍后再试 🙏",
+    "busyMessage": "我还在思考上一个问题，请稍等一下～",
+    "resetMessage": "上下文已清空，我们重新开始吧 ✨"
+  },
+  "wechat": {
+    "puppet": "onebot",
+    "groupRequireMention": true,
+    "groupWhitelist": [],
+    "aliasWhitelist": [],
+    "selfReplyLoopGuard": true
+  },
+  "onebot": {
+    "httpUrl": "http://127.0.0.1:3000",
+    "wsUrl": "ws://127.0.0.1:3001",
+    "accessToken": "",
+    "reconnectMaxDelayMs": 30000
+  },
+  "behavior": {
+    "maxHistoryTurns": 8,
+    "rateLimitPerMinute": 10,
+    "streamMinDelta": 60,
+    "maxReplyChars": 1200,
+    "typingDelayMs": 300,
+    "contextPrompt": "",
+    "interruptOnNewMessage": true,
+    "rateLimitMessage": true,
+    "streamMode": "off",
+    "groupTrigger": "mention-or-name",
+    "personasDir": "./personas",
+    "defaultPersona": "",
+    "commands": {
+      "reset": [
+        "/reset",
+        "/clear",
+        "/清空",
+        "重置"
+      ],
+      "persona": [
+        "/人格",
+        "/persona",
+        "/切换人格"
+      ],
+      "help": [
+        "/help",
+        "/帮助"
+      ]
+    },
+    "maxHistoryTokens": 0
+  },
+  "storage": {
+    "dir": "./data",
+    "logDir": "./logs",
+    "logLevel": "info",
+    "sessionTtlMinutes": 120,
+    "persistSessions": false,
+    "webuiPort": 6180,
+    "webuiToken": ""
+  }
+}

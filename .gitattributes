@@ -1,0 +1,24 @@
+﻿# 默认：由 git 自动判断文本/二进制，并在仓库内统一用 LF 存储
+* text=auto
+
+# Windows 脚本必须保持 CRLF，否则 PowerShell 5.1 与 cmd 在某些场景会出现怪问题
+*.ps1 text eol=crlf
+*.cmd text eol=crlf
+*.bat text eol=crlf
+
+# 另外：含中文的 .ps1 必须带 UTF-8 BOM（由 test/run-tests.js 里的守卫用例强制），
+# git 不会改动 BOM，但不要用任何会重写编码的方式处理这些文件。
+
+# 明确按二进制处理，避免行尾转换损坏文件
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.zip binary
+*.exe binary
+
+# GitHub 语言统计与 diff 展示
+test/ linguist-test=true
+*.md linguist-documentation
+WebUI linguist-vendored=false

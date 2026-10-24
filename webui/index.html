@@ -1,0 +1,607 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="build" content="__BUILD__">
+<title>LLM QQ 机器人 · 控制台</title>
+<style>
+  :root{
+    --bg:#0f1115; --panel:#171a21; --panel2:#1e222b; --line:#2a2f3a;
+    --text:#e6e8ee; --dim:#8b93a5; --accent:#4c8dff; --ok:#3fb950;
+    --warn:#d29922; --err:#f85149; --radius:10px;
+  }
+  :root.light{
+    --bg:#f4f5f7; --panel:#ffffff; --panel2:#eef0f4; --line:#d8dde5;
+    --text:#1c2128; --dim:#667085; --accent:#2563eb; --ok:#1a7f37;
+    --warn:#9a6700; --err:#cf222e;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);
+       font:14px/1.6 -apple-system,"Segoe UI","Microsoft YaHei",sans-serif}
+  header{display:flex;align-items:center;gap:16px;padding:14px 20px;
+         border-bottom:1px solid var(--line);background:var(--panel)}
+  header h1{font-size:15px;margin:0;font-weight:600}
+  header .tag{font-size:12px;color:var(--dim)}
+  nav{display:flex;gap:4px;padding:10px 20px 0;background:var(--panel);
+      border-bottom:1px solid var(--line)}
+  nav button{background:none;border:none;color:var(--dim);padding:8px 14px;
+             cursor:pointer;font-size:14px;border-bottom:2px solid transparent}
+  nav button:hover{color:var(--text)}
+  nav button.on{color:var(--accent);border-bottom-color:var(--accent)}
+  main{padding:20px;max-width:1180px;margin:0 auto}
+  .page{display:none} .page.on{display:block}
+  .grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(250px,1fr))}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px}
+  .card h3{margin:0 0 10px;font-size:13px;color:var(--dim);font-weight:600;
+           text-transform:uppercase;letter-spacing:.4px}
+  .row{display:flex;justify-content:space-between;gap:12px;padding:3px 0}
+  .row span:last-child{color:var(--dim);text-align:right;word-break:break-all}
+  .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;vertical-align:1px}
+  .dot.ok{background:var(--ok);box-shadow:0 0 6px var(--ok)}
+  .dot.off{background:#4a5163}
+  .dot.warn{background:var(--warn)}
+  .dot.err{background:var(--err)}
+  button.btn{background:var(--accent);color:#fff;border:none;border-radius:7px;
+             padding:8px 14px;cursor:pointer;font-size:13px}
+  button.btn:hover{filter:brightness(1.12)}
+  button.btn.ghost{background:var(--panel2);color:var(--text);border:1px solid var(--line)}
+  button.btn.danger{background:#3a1d1f;color:#ff9b95;border:1px solid #5a2a2d}
+  button.btn:disabled{opacity:.5;cursor:not-allowed}
+  .bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+  .split{display:grid;grid-template-columns:250px 1fr;gap:14px;align-items:start}
+  .plist{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+  .plist .item{padding:10px 13px;cursor:pointer;border-bottom:1px solid var(--line);
+               display:flex;justify-content:space-between;gap:8px;align-items:center}
+  .plist .item:last-child{border-bottom:none}
+  .plist .item:hover{background:var(--panel2)}
+  .plist .item.on{background:#1b2740;border-left:3px solid var(--accent);padding-left:10px}
+  .plist .item.tpl{opacity:.55}
+  .plist .item small{color:var(--dim);font-size:11px}
+  label{display:block;font-size:12px;color:var(--dim);margin:12px 0 4px}
+  input,textarea,select{width:100%;background:var(--panel2);border:1px solid var(--line);
+        color:var(--text);border-radius:7px;padding:8px 10px;font:inherit;font-size:13px}
+  textarea{resize:vertical;line-height:1.6}
+  input:focus,textarea:focus,select:focus{outline:none;border-color:var(--accent)}
+  .hint{font-size:12px;color:var(--dim);margin-top:4px}
+  .chatbox{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+           padding:14px;height:420px;overflow:auto;margin-bottom:10px}
+  .msg{margin-bottom:12px;display:flex;gap:10px}
+  .msg .who{flex:0 0 64px;color:var(--dim);font-size:12px;padding-top:3px}
+  .msg .txt{white-space:pre-wrap;word-break:break-word;flex:1}
+  .msg.me .txt{color:#bcd4ff}
+  .msg.sys .txt{color:var(--dim);font-style:italic}
+  pre.log{background:#0b0d11;border:1px solid var(--line);border-radius:var(--radius);
+          padding:12px;overflow:auto;max-height:560px;font-size:12px;line-height:1.5;
+          white-space:pre-wrap;word-break:break-all;color:#c9d1d9}
+  .toast{position:fixed;right:20px;bottom:20px;background:var(--panel2);
+         border:1px solid var(--line);border-left:3px solid var(--accent);
+         padding:10px 16px;border-radius:7px;opacity:0;transform:translateY(8px);
+         transition:.18s;pointer-events:none;max-width:420px}
+  .toast.on{opacity:1;transform:none}
+  .toast.err{border-left-color:var(--err)}
+  .toast.ok{border-left-color:var(--ok)}
+  code{background:var(--panel2);padding:1px 5px;border-radius:4px;font-size:12px}
+</style>
+</head>
+<body>
+<header>
+  <h1>LLM QQ 机器人</h1>
+  <span class="tag" id="hdrTag">控制台</span>
+  <button class="btn ghost" id="btnTheme" style="margin-left:auto" title="切换日间 / 夜晚">🌙 夜晚</button>
+</header>
+<nav>
+  <button data-p="status" class="on">状态</button>
+  <button data-p="personas">人格</button>
+  <button data-p="chat">测试对话</button>
+  <button data-p="logs">日志</button>
+</nav>
+<main>
+  <!-- 状态 -->
+  <section class="page on" id="p-status">
+    <div class="bar">
+      <button class="btn" id="btnStart">▶ 一键启动整套</button>
+      <button class="btn ghost" id="btnReload">重载机器人</button>
+      <button class="btn ghost" id="btnRefresh">刷新</button>
+      <span class="hint" id="statusTime"></span>
+    </div>
+    <div class="hint" id="startHint" style="margin:-6px 0 12px"></div>
+    <div class="grid" id="statusGrid"></div>
+
+    <div class="card" style="margin-top:14px">
+      <h3>运行参数（写入 .env）</h3>
+      <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:flex-end">
+        <div style="flex:0 0 180px">
+          <label>记忆轮数 MAX_HISTORY_TURNS</label>
+          <input id="rtTurns" type="number" min="0" max="2000" step="1">
+          <div class="hint">每个会话保留的对话轮数；0 = 不保留。可以设置较大值，但建议同时设置下方的 token 上限</div>
+        </div>
+        <div style="flex:0 0 180px">
+          <label>限流 RATE_LIMIT_PER_MINUTE</label>
+          <input id="rtRate" type="number" min="0" max="600" step="1">
+          <div class="hint">每人每分钟上限；0 = 不限</div>
+        </div>
+        <div style="flex:0 0 200px">
+          <label>历史 token 上限 MAX_HISTORY_TOKENS</label>
+          <input id="rtTokens" type="number" min="0" max="900000" step="10000">
+          <div class="hint">0 = 仅按轮数限制；建议 300000–600000（模型窗口 1M，超出会报错）</div>
+        </div>
+        <button class="btn" id="btnRtSave" style="margin-bottom:18px">保存到 .env</button>
+      </div>
+      <div class="hint" style="margin-top:6px">保存后需点击「重载机器人」才能生效。写入前会自动备份为 <code>.env.bak</code>。</div>
+    </div>
+
+    <div class="card" style="margin-top:14px">
+      <h3>用量与余额</h3>
+      <div id="usageRows"><div class="hint">读取中…</div></div>
+    </div>
+  </section>
+
+  <!-- 人格 -->
+  <section class="page" id="p-personas">
+    <div class="card" style="margin-bottom:14px">
+      <h3>按原作生成草稿（只需提供来源与角色名）</h3>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">
+        <div style="flex:1 1 220px"><label>作品来源</label><input id="dsSource" placeholder="Fate/Grand Order"></div>
+        <div style="flex:1 1 160px"><label>角色名称</label><input id="dsName" placeholder="摩根"></div>
+        <button class="btn" id="btnDesign" style="margin-bottom:18px">生成草稿</button>
+      </div>
+      <div class="hint">仅生成正常向、全年龄的聊天人格，不产出性内容。生成后进入编辑器，可自由修改再保存。</div>
+    </div>
+    <div class="bar">
+      <button class="btn" id="btnNew">＋ 新建人格</button>
+      <button class="btn ghost" id="btnReloadPersonas">重新读取</button>
+      <span class="hint">修改后需点击「重载机器人」才会在 QQ 中生效</span>
+    </div>
+    <div class="split">
+      <div class="plist" id="personaList"></div>
+      <div class="card" id="personaEditor">
+        <h3 id="editorTitle">未选择</h3>
+        <div id="editorFields" style="display:none">
+          <label>id（文件名，创建后不建议改）</label>
+          <input id="fId" placeholder="morgan">
+          <label>显示名 name <span style="color:var(--err)">*</span></label>
+          <input id="fName" placeholder="摩根">
+          <label>别名 aliases（逗号分隔；会自动加入群聊 @ 识别名单）</label>
+          <input id="fAliases" placeholder="Morgan, 妖精王">
+          <label>简介 description（菜单里显示一行）</label>
+          <input id="fDesc" placeholder="Fate/Grand Order · 妖精国不列颠的女王">
+          <label>开场白 greeting（被选中时先说一句，可留空）</label>
+          <input id="fGreeting" placeholder="（合上书）来了。">
+          <label>人格正文 systemPrompt <span style="color:var(--err)">*</span></label>
+          <textarea id="fPrompt" rows="12" placeholder="你是……。性格……。称呼对方为……。说话……。"></textarea>
+          <div class="hint" id="promptLen"></div>
+          <div class="bar" style="margin-top:14px">
+            <button class="btn" id="btnSave">保存</button>
+            <button class="btn danger" id="btnDelete">删除</button>
+            <button class="btn ghost" id="btnTryIt">用它试一句</button>
+          </div>
+        </div>
+        <div id="editorEmpty" class="hint">从左侧选择一个人格，或点击「新建人格」。</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 测试对话 -->
+  <section class="page" id="p-chat">
+    <div class="bar">
+      <select id="chatPersona" style="width:auto;min-width:200px"></select>
+      <button class="btn ghost" id="btnClearChat">清空上下文</button>
+      <span class="hint">通过真实 DeepSeek 接口试聊，效果与 QQ 中一致（不含 @ 规则与限流）</span>
+    </div>
+    <div class="chatbox" id="chatBox">
+      <div class="msg sys"><div class="who"></div><div class="txt">选择一个人格，然后输入内容开始对话。</div></div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <input id="chatInput" placeholder="输入消息…（回车发送）" autocomplete="off">
+      <button class="btn" id="btnSend">发送</button>
+    </div>
+  </section>
+
+  <!-- 日志 -->
+  <section class="page" id="p-logs">
+    <div class="bar">
+      <select id="logWhich" style="width:auto">
+        <option value="bot">机器人 bot-run.log</option>
+        <option value="launcher">启动自检 launcher.log</option>
+        <option value="watchdog">看门狗 watchdog.log</option>
+      </select>
+      <button class="btn ghost" id="btnLogs">刷新</button>
+      <label style="margin:0;display:flex;align-items:center;gap:6px">
+        <input type="checkbox" id="logAuto" style="width:auto"> 自动刷新
+      </label>
+    </div>
+    <pre class="log" id="logBox">加载中…</pre>
+  </section>
+</main>
+<div id="staleBar" style="display:none;position:fixed;top:0;left:0;right:0;z-index:99;
+       background:var(--warn);color:#111;padding:9px 16px;font-size:13px;text-align:center">
+    页面已过期（服务端已更新）—— <a href="javascript:location.reload(true)"
+      style="color:#111;font-weight:700">点击此处刷新</a>，否则按钮可能无响应
+  </div>
+<div class="toast" id="toast"></div>
+
+<script>
+const $ = (s) => document.querySelector(s);
+// 页面加载时的构建号；与服务端不一致说明该标签页是旧版本
+const MY_BUILD = document.querySelector('meta[name="build"]')?.content || null;
+const api = async (method, url, body) => {
+  const r = await fetch(url, {
+    method,
+    headers: body ? { 'Content-Type': 'application/json' } : {},
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(j.error || ('HTTP ' + r.status));
+  return j;
+};
+let toastTimer;
+function toast(msg, kind = '') {
+  const t = $('#toast');
+  t.textContent = msg;
+  t.className = 'toast on ' + kind;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => (t.className = 'toast ' + kind), 3200);
+}
+const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+/* ---------- 日间 / 夜晚 ---------- */
+const THEME_KEY = 'dsh_theme';
+function applyTheme(mode) {
+  const light = mode === 'light';
+  document.documentElement.classList.toggle('light', light);
+  $('#btnTheme').textContent = light ? '☀️ 日间' : '🌙 夜晚';
+  try { localStorage.setItem(THEME_KEY, light ? 'light' : 'dark'); } catch {}
+}
+$('#btnTheme').onclick = () => {
+  const light = !document.documentElement.classList.contains('light');
+  applyTheme(light ? 'light' : 'dark');
+};
+applyTheme((() => { try { return localStorage.getItem(THEME_KEY) || 'dark'; } catch { return 'dark'; } })());
+
+/* ---------- 页签 ---------- */
+document.querySelectorAll('nav button').forEach((b) => {
+  b.onclick = () => {
+    document.querySelectorAll('nav button').forEach((x) => x.classList.toggle('on', x === b));
+    document.querySelectorAll('.page').forEach((p) => p.classList.toggle('on', p.id === 'p-' + b.dataset.p));
+    if (b.dataset.p === 'status') loadStatus();
+    if (b.dataset.p === 'personas') loadPersonas();
+    if (b.dataset.p === 'chat') loadPersonas();
+    if (b.dataset.p === 'logs') loadLogs();
+  };
+});
+
+/* ---------- 状态 ---------- */
+function dot(on, warn) { return `<span class="dot ${on ? (warn ? 'warn' : 'ok') : 'off'}"></span>`; }
+async function loadStatus() {
+  try {
+    const [s, c] = await Promise.all([api('GET', '/api/status'), api('GET', '/api/config')]);
+    $('#hdrTag').textContent = c.model + ' · ' + c.apiKeyMasked;
+    // 旧标签页检测：服务端页面已更新时提示刷新
+    if (MY_BUILD && c.pageBuild && MY_BUILD !== c.pageBuild) {
+      $('#staleBar').style.display = 'block';
+    }
+    $('#statusTime').textContent = '更新于 ' + new Date(s.time).toLocaleTimeString();
+    const login = s.onebot.login;
+    $('#statusGrid').innerHTML = `
+      <div class="card"><h3>机器人进程</h3>
+        <div class="row"><span>${dot(s.bot.running)}运行状态</span><span>${s.bot.running ? '运行中' : '未运行'}</span></div>
+        <div class="row"><span>PID</span><span>${s.bot.pid ?? '—'}</span></div>
+        <div class="row"><span>单实例锁</span><span>127.0.0.1:39999</span></div>
+        <div class="bar" style="margin:12px 0 0"><button class="btn ghost" id="btnReload2">重载机器人</button></div>
+        ${!s.bot.running ? '<div class="hint" style="color:var(--warn)">机器人未运行，可通过上方按钮启动。</div>' : ''}
+      </div>
+      <div class="card"><h3>NapCat / QQ</h3>
+        <div class="row"><span>${dot(s.napcat.http3000)}HTTP 3000</span><span>${s.napcat.http3000 ? '监听中' : '未监听'}</span></div>
+        <div class="row"><span>${dot(s.napcat.ws3001)}WebSocket 3001</span><span>${s.napcat.ws3001 ? '监听中' : '未监听'}</span></div>
+        <div class="row"><span>${dot(s.napcat.webui6099)}WebUI 6099</span><span>${s.napcat.webui6099 ? '监听中' : '未监听'}</span></div>
+        ${!s.napcat.http3000 ? `<div class="hint" style="margin-top:10px;color:var(--warn);line-height:1.7">
+          ⚠️ NapCat 未运行，机器人无法连接后端。<br>
+          请先等待 1–3 分钟（QQ 重启时 NapCat 会一同恢复）；<br>
+          若长时间未恢复，请双击桌面快捷方式「<b>启动 DeepSeek QQ 机器人</b>」——
+          <b>重新注入需要管理员权限，本页按钮无法替代</b>。
+        </div>` : ''}
+      </div>
+      <div class="card"><h3>登录状态</h3>
+        <div class="row"><span>${dot(!!login)}账号</span><span>${login ? esc(login.nickname) + ' (' + login.userId + ')' : '未登录 / 无法获取'}</span></div>
+        <div class="row"><span>NapCat</span><span>${s.onebot.version ? esc(s.onebot.version.app) + ' ' + esc(s.onebot.version.version) : '—'}</span></div>
+        <div class="row"><span>协议</span><span>${s.onebot.version ? esc(s.onebot.version.protocol) : '—'}</span></div>
+      </div>
+      <div class="card"><h3>配置</h3>
+        <div class="row"><span>模型</span><span>${esc(c.model)}</span></div>
+        <div class="row"><span>机器人昵称</span><span>${esc(c.botName)}</span></div>
+        <div class="row"><span>群聊触发</span><span>${esc(c.groupTrigger)}</span></div>
+        <div class="row"><span>记忆 / 限流</span><span>${c.maxHistoryTurns} 轮 / ${c.rateLimitPerMinute} 次每分</span></div>
+        <div class="row"><span>可用人格</span><span>${s.personas.count} 个（模板 ${s.personas.templates}）</span></div>
+      </div>`;
+    const r2 = $('#btnReload2');
+    if (r2) r2.onclick = doReload;
+    loadUsage();
+
+    // 回填运行参数（用户正在输入时不覆盖）
+    const ae = document.activeElement;
+    if (ae !== $('#rtTurns')) $('#rtTurns').value = c.maxHistoryTurns;
+    if (ae !== $('#rtRate')) $('#rtRate').value = c.rateLimitPerMinute;
+    if (ae !== $('#rtTokens')) $('#rtTokens').value = c.maxHistoryTokens ?? 0;
+
+    // 「一键启动」的可用性与说明
+    const needStart = !s.bot.running || !s.napcat.http3000;
+    const bs = $('#btnStart');
+    bs.className = 'btn' + (needStart ? '' : ' ghost');
+    bs.disabled = !s.launcher;
+    const parts = [];
+    if (!s.launcher) parts.push('⚠️ 找不到 start-bot.ps1（应位于项目上一级，或用 .env 的 LAUNCHER_PATH 指定）');
+    else {
+      if (!s.napcat.http3000) parts.push('NapCat 未运行 —— 启动时会弹出 UAC 注入授权，请点击「是」');
+      if (!s.bot.running) parts.push('机器人未运行');
+      if (!needStart) parts.push('一切正常；重复点击不会产生副作用（已运行的部分会自动跳过）');
+      parts.push('脚本：' + s.launcher);
+    }
+    $('#startHint').innerHTML = parts.map((x) => '· ' + esc(x)).join('<br>');
+  } catch (e) { toast('读取状态失败：' + e.message, 'err'); }
+}
+let fastPoll = null;
+async function doStart() {
+  if (!confirm('将从控制台启动整套服务（QQ / NapCat / 机器人 / 看门狗）。\n\n若需注入 NapCat，会弹出 UAC 权限窗口，请点击「是」。\n\n是否继续？')) return;
+  try {
+    const r = await api('POST', '/api/start');
+    toast('已打开启动窗口' + (r.note ? '：' + r.note : ''), 'ok');
+  } catch (e) { toast('启动失败：' + e.message, 'err'); return; }
+  // 启动约需 10~40 秒，期间每 2 秒刷新一次状态以显示进度
+  clearInterval(fastPoll);
+  let n = 0;
+  fastPoll = setInterval(async () => {
+    n++;
+    await loadStatus();
+    if (n >= 25) { clearInterval(fastPoll); fastPoll = null; }
+  }, 2000);
+}
+$('#btnStart').onclick = doStart;
+
+async function doReload() {
+  if (!confirm('重载会重启机器人进程（约 10 秒，期间无法接收消息）。是否继续？')) return;
+  try { await api('POST', '/api/reload'); toast('已触发重载，约 10 秒后自动刷新状态', 'ok'); }
+  catch (e) { toast('重载失败：' + e.message, 'err'); return; }
+  setTimeout(loadStatus, 12000);
+}
+$('#btnRtSave').onclick = async () => {
+  const body = {};
+  const turns = $('#rtTurns').value.trim();
+  const rate = $('#rtRate').value.trim();
+  if (turns !== '') body.maxHistoryTurns = Number(turns);
+  const tokens = $('#rtTokens').value.trim();
+  if (tokens !== '') body.maxHistoryTokens = Number(tokens);
+  if (rate !== '') body.rateLimitPerMinute = Number(rate);
+  if (!Object.keys(body).length) return toast('没有要改的项', 'err');
+  try {
+    const r = await api('POST', '/api/runtime', body);
+    toast('已写入 .env' + (r.backup ? '（已备份 .env.bak）' : '') + '，点击「重载机器人」后生效', 'ok');
+  } catch (e) { toast('保存失败：' + e.message, 'err'); }
+};
+$('#btnReload').onclick = doReload;
+$('#btnRefresh').onclick = loadStatus;
+
+/* ---------- 用量与余额 ---------- */
+const num = (n) => (Number(n) || 0).toLocaleString('en-US');
+const cny = (n) => {
+  const v = Number(n) || 0;
+  if (v === 0) return '¥0';
+  return '¥' + (v < 0.01 ? v.toFixed(5) : v.toFixed(4));
+};
+const tokLine = (u) => {
+  if (!u) return '—';
+  const total = (Number(u.promptTokens) || 0) + (Number(u.completionTokens) || 0);
+  return `${num(u.requests)} 次 · ${num(total)} tokens（入 ${num(u.promptTokens)} / 出 ${num(u.completionTokens)}） · ${cny(u.costCNY)}`;
+};
+const row = (label, value, sub) =>
+  `<div class="row"><span>${esc(label)}</span><span>${value}${sub ? '<br><small style="color:var(--dim)">' + sub + '</small>' : ''}</span></div>`;
+
+async function loadUsage() {
+  try {
+    const u = await api('GET', '/api/usage');
+    const parts = [];
+
+    if (u.bot?.error) {
+      parts.push(row('机器人用量', '<span style="color:var(--err)">读取失败</span>', esc(u.bot.error)));
+    } else if (u.bot?.pending) {
+      parts.push(row('机器人用量', '<span style="color:var(--warn)">等待重启</span>', '已开启落盘，机器人进程尚未写入 —— 重启后开始统计'));
+    } else if (u.bot) {
+      parts.push(row('机器人 · 本次', esc(tokLine(u.bot.session))));
+      parts.push(row('机器人 · 累计', esc(tokLine(u.bot.lifetime))));
+      if (u.bot.cacheHitRate != null) {
+        parts.push(row('缓存命中率', (u.bot.cacheHitRate * 100).toFixed(1) + '%', '命中部分单价约为未命中的 1/50'));
+      }
+      if (u.bot.updatedAt) {
+        parts.push(row('统计更新于', new Date(u.bot.updatedAt).toLocaleTimeString()));
+      }
+    } else {
+      parts.push(row('机器人用量', '<span style="color:var(--dim)">未开启落盘</span>', '需要 PERSIST_SESSIONS=true'));
+    }
+
+    parts.push(row('控制台 · 试聊本次', esc(tokLine(u.console)), u.console ? '仅统计本控制台「测试对话」的用量，不含 QQ 内的对话' : '尚未试聊（或未配置 Key）'));
+
+    if (u.balance) {
+      const b = u.balance;
+      parts.push(
+        row(
+          '账户余额',
+          `<b style="color:var(--ok);font-size:15px">¥${(b.total || 0).toFixed(2)}</b>`,
+          `充值 ¥${(b.toppedUp || 0).toFixed(2)} + 赠送 ¥${(b.granted || 0).toFixed(2)}` +
+            (b.available ? '' : ' · <span style="color:var(--err)">账户不可用</span>'),
+        ),
+      );
+    } else {
+      parts.push(row('账户余额', '<span style="color:var(--warn)">无法获取</span>', esc(u.balanceError || '未知原因')));
+    }
+
+    $('#usageRows').innerHTML = parts.join('');
+  } catch (e) {
+    $('#usageRows').innerHTML = '<div class="hint" style="color:var(--err)">读取失败：' + esc(e.message) + '</div>';
+  }
+}
+
+/* ---------- 人格 ---------- */
+let personas = [];
+let current = null;
+const emptyForm = () => ({ id: '', name: '', aliases: '', description: '', greeting: '', systemPrompt: '', originalId: null });
+
+async function loadPersonas() {
+  try {
+    const r = await api('GET', '/api/personas');
+    personas = r.personas;
+    $('#personaList').innerHTML = personas.map((p) => `
+      <div class="item ${p.template ? 'tpl' : ''} ${current && current.id === p.id ? 'on' : ''}" data-id="${esc(p.id)}" data-file="${esc(p.file)}">
+        <span>${p.broken ? '⚠️ ' : ''}${esc(p.name || p.id)}<br><small>${esc(p.id)}${p.template ? ' · 模板' : ''}</small></span>
+      </div>`).join('') || '<div class="item">还没有人格文件</div>';
+    document.querySelectorAll('#personaList .item[data-id]').forEach((el) => {
+      el.onclick = () => selectPersona(el.dataset.id);
+    });
+    const usable = personas.filter((p) => !p.template && !p.broken);
+    $('#chatPersona').innerHTML =
+      usable.length
+        ? '<option value="">（使用 .env 的兜底人格）</option>' +
+          usable.map((p) => `<option value="${esc(p.id)}">${esc(p.name)}</option>`).join('')
+        : '<option value="">（没有可用人格，正在使用 .env 的兜底人格）</option>';
+    if (!usable.length) {
+      toast('personas/ 中没有可用的人格文件（_ 前缀为模板，不参与选择）');
+    }
+  } catch (e) { toast('读取人格失败：' + e.message, 'err'); }
+}
+function fillForm(p) {
+  current = p;
+  $('#editorTitle').textContent = p.originalId ? '编辑：' + (p.name || p.id) : '新建人格';
+  $('#editorFields').style.display = '';
+  $('#editorEmpty').style.display = 'none';
+  $('#fId').value = p.id || '';
+  $('#fName').value = p.name || '';
+  $('#fAliases').value = Array.isArray(p.aliases) ? p.aliases.join(', ') : (p.aliases || '');
+  $('#fDesc').value = p.description || '';
+  $('#fGreeting').value = p.greeting || '';
+  $('#fPrompt').value = p.systemPrompt || '';
+  $('#btnDelete').disabled = !p.originalId;
+  updateLen();
+}
+function selectPersona(id) {
+  const p = personas.find((x) => x.id === id);
+  if (!p) return;
+  if (p.template) { toast('该文件为模板，请先复制一份再修改（或点击「新建人格」）'); return; }
+  if (p.broken) { toast('该文件解析失败：' + (p.error || ''), 'err'); return; }
+  fillForm({ ...p, originalId: p.id });
+  document.querySelectorAll('#personaList .item').forEach((el) => el.classList.toggle('on', el.dataset.id === id));
+}
+function updateLen() {
+  const n = $('#fPrompt').value.trim().length;
+  $('#promptLen').textContent = n ? `正文 ${n} 字（建议 50–4000）` : '';
+}
+$('#fPrompt').addEventListener('input', updateLen);
+$('#btnDesign').onclick = async () => {
+  const source = $('#dsSource').value.trim();
+  const name = $('#dsName').value.trim();
+  if (!source || !name) return toast('请填写「作品来源」与「角色名称」', 'err');
+  const b = $('#btnDesign');
+  b.disabled = true; b.textContent = '生成中…';
+  try {
+    const r = await api('POST', '/api/personas/design', { source, name });
+    fillForm({ ...r.draft, id: '', originalId: null });
+    document.querySelectorAll('#personaList .item').forEach((el) => el.classList.remove('on'));
+    $('#fId').value = '';
+    $('#editorTitle').textContent = 'AI 草稿：' + r.draft.name;
+    if (r.problems?.length) toast('草稿有问题：' + r.problems.join('；'), 'err');
+    else toast('草稿已生成，确认后点击「保存」', 'ok');
+  } catch (e) { toast('生成失败：' + e.message, 'err'); }
+  finally { b.disabled = false; b.textContent = '生成草稿'; }
+};
+$('#btnNew').onclick = () => { fillForm(emptyForm()); document.querySelectorAll('#personaList .item').forEach((el) => el.classList.remove('on')); };
+$('#btnReloadPersonas').onclick = loadPersonas;
+$('#btnSave').onclick = async () => {
+  const body = {
+    id: $('#fId').value.trim() || $('#fName').value.trim(),
+    name: $('#fName').value.trim(),
+    aliases: $('#fAliases').value,
+    description: $('#fDesc').value.trim(),
+    greeting: $('#fGreeting').value.trim(),
+    systemPrompt: $('#fPrompt').value,
+    originalId: current?.originalId || null,
+  };
+  try {
+    const r = await api('POST', '/api/personas', body);
+    toast('已保存「' + r.persona.name + '」', 'ok');
+    await loadPersonas();
+    selectPersona(r.persona.id);
+  } catch (e) { toast('保存失败：' + e.message, 'err'); }
+};
+$('#btnDelete').onclick = async () => {
+  if (!current?.originalId) return;
+  if (!confirm(`确认删除人格「${current.name || current.id}」？该操作不可撤销。`)) return;
+  try {
+    await api('DELETE', '/api/personas?id=' + encodeURIComponent(current.originalId));
+    toast('已删除', 'ok');
+    current = null;
+    $('#editorFields').style.display = 'none';
+    $('#editorEmpty').style.display = '';
+    $('#editorTitle').textContent = '未选择';
+    await loadPersonas();
+  } catch (e) { toast('删除失败：' + e.message, 'err'); }
+};
+$('#btnTryIt').onclick = () => {
+  if (!current?.originalId) return toast('请先保存再试', 'err');
+  document.querySelector('nav button[data-p="chat"]').click();
+  $('#chatPersona').value = current.originalId;
+};
+
+/* ---------- 测试对话 ---------- */
+function addMsg(who, text, cls = '') {
+  const d = document.createElement('div');
+  d.className = 'msg ' + cls;
+  d.innerHTML = `<div class="who">${esc(who)}</div><div class="txt">${esc(text)}</div>`;
+  $('#chatBox').appendChild(d);
+  $('#chatBox').scrollTop = $('#chatBox').scrollHeight;
+  return d;
+}
+async function sendChat() {
+  const text = $('#chatInput').value.trim();
+  if (!text) return;
+  $('#chatInput').value = '';
+  addMsg('我', text, 'me');
+  const wait = addMsg('…', '思考中…', 'sys');
+  try {
+    const r = await api('POST', '/api/chat', { personaId: $('#chatPersona').value, message: text });
+    wait.remove();
+    addMsg(r.persona, r.reply);
+    $('#hdrTag').textContent = `${r.elapsedMs}ms · 第 ${r.turns} 轮 · ${r.usage?.total_tokens ?? '?'} tokens`;
+  } catch (e) { wait.remove(); addMsg('错误', e.message, 'sys'); }
+}
+$('#btnSend').onclick = sendChat;
+$('#chatInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') sendChat(); });
+$('#btnClearChat').onclick = async () => {
+  await api('POST', '/api/chat/reset', { personaId: $('#chatPersona').value });
+  $('#chatBox').innerHTML = '<div class="msg sys"><div class="who"></div><div class="txt">上下文已清空。</div></div>';
+  toast('上下文已清空', 'ok');
+};
+
+/* ---------- 日志 ---------- */
+let logTimer;
+async function loadLogs() {
+  try {
+    const r = await api('GET', '/api/logs?which=' + $('#logWhich').value + '&lines=200');
+    $('#logBox').textContent = r.lines.length ? r.lines.join('\n') : '(日志为空)';
+    $('#logBox').scrollTop = $('#logBox').scrollHeight;
+  } catch (e) { $('#logBox').textContent = '读取失败：' + e.message; }
+}
+$('#btnLogs').onclick = loadLogs;
+$('#logWhich').onchange = loadLogs;
+$('#logAuto').onchange = (e) => {
+  clearInterval(logTimer);
+  if (e.target.checked) logTimer = setInterval(loadLogs, 3000);
+};
+
+/* ---------- 启动 ---------- */
+loadStatus();
+loadUsage();
+// 启动时也需加载一次：「测试对话」的人格下拉框依赖该请求填充。
+// 若仅在切换到「人格」页签时加载，直接进入「测试对话」时下拉框为空，无法选择人格。
+loadPersonas();
+setInterval(() => { if ($('#p-status').classList.contains('on')) loadStatus(); }, 8000);
+</script>
+</body>
+</html>
